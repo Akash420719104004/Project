@@ -28,6 +28,7 @@ public class EmailServiceImpl implements EmailService {
             throw new RuntimeException("Failed to send email", e);
         }
     }
+    
 
     private boolean areValidEmails(String[] emails) {
         for (String email : emails) {

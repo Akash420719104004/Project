@@ -40,7 +40,7 @@ public class WebSecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(
                         auth -> auth.requestMatchers("/","/login","/refresh","/signup","/swagger-ui/**",
-                                        "/v3/api-docs/**","/getAll","/addLang","/addContent","/register","/students").permitAll()
+                                        "/v3/api-docs/**","/getAll","/addContent","/register","/students").permitAll()
                                 .requestMatchers(HttpMethod.GET).permitAll()
                                 .anyRequest().authenticated());
         http.authenticationProvider(authenticationProvider(jwtUserDetailsService));

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
+
 @Service
 public class OTPServiceImpl implements OTPService {
     @Autowired
@@ -34,4 +35,5 @@ public class OTPServiceImpl implements OTPService {
     public void clearOtp(String email) {
         otpStorage.remove(email);
     }
+
 }
