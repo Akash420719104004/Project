@@ -61,7 +61,6 @@ public class PathServiceImpl implements PatrhService {
         }
         return pathName;
     }
-
     public Optional<DeleteResult> findById(String id) {
         Query query=new Query();
         query.addCriteria(Criteria.where("id").is(id));
