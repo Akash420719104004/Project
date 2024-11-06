@@ -1,6 +1,10 @@
 package com.lms.project.Service.ServiceImpl;
 import com.lms.project.Service.UserService;
+import com.lms.project.configure.requestDtos.EmailVerifyDto;
+import com.lms.project.dto.UserContextDto;
+import com.lms.project.dto.UserContextHolder;
 import com.lms.project.dto.UserDto;
+import com.lms.project.dto.UserProfileDto;
 import com.lms.project.exceptions.ApplicationException;
 import com.lms.project.exceptions.ErrorCode;
 import com.lms.project.model.User;
@@ -125,6 +129,28 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {throw new ApplicationException(ErrorCode.CAP_1001);
         }
         return pageResponse;
+    }
+
+    @Override
+    public UserProfileDto addProfile() {
+        UserContextDto userDto= UserContextHolder.getUserDto();
+        User user=userRepository.findById(userDto.getId()).orElseThrow(()->new RuntimeException("User Not Found"));
+        UserProfileDto userProfileDto=new UserProfileDto();
+        userProfileDto.setFullName(user.getUserName());
+        userProfileDto.setDob(String.valueOf(user.getDob()));
+        userProfileDto.setEmail(user.getEmail());
+        userProfileDto.setStatus(user.isStatus());
+        userProfileDto.setMobileNo(user.getMobile());
+        return userProfileDto;
+    }
+
+    @Override
+    public EmailVerifyDto findByEmailToName(String email) {
+        User user=userRepository.findByEmailId(email);
+        EmailVerifyDto emailVerifyDto=new EmailVerifyDto();
+        emailVerifyDto.setEmail(user.getEmail());
+        emailVerifyDto.setName(user.getUserName());
+        return emailVerifyDto;
     }
 
 }
