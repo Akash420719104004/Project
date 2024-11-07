@@ -20,6 +20,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +41,8 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     @Autowired
     ModelMapper modelMapper;
+    @Autowired
+    MongoTemplate mongoTemplate;
 
     private static String formatDob(LocalDate dob) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
@@ -59,7 +67,7 @@ public class UserServiceImpl implements UserService {
         }
         try {
             User user = userRepository.findById(userSignUpRequestDto.getId()).orElse(new User());
-            boolean isNewUser=user.getId()==null;
+            boolean isNewUser = user.getId() == null;
             user.setUserName(userSignUpRequestDto.getName());
             user.setUserType(userSignUpRequestDto.getUserType());
             user.setEmail(userSignUpRequestDto.getUserEmailID());
@@ -126,16 +134,17 @@ public class UserServiceImpl implements UserService {
             pageResponse.setHasNext(userResponseDTOPage.hasNext());
             pageResponse.setHasPrevious(userResponseDTOPage.hasPrevious());
             pageResponse.setTotalRecordCount(userResponseDTOPage.getTotalElements());
-        } catch (Exception e) {throw new ApplicationException(ErrorCode.CAP_1001);
+        } catch (Exception e) {
+            throw new ApplicationException(ErrorCode.CAP_1001);
         }
         return pageResponse;
     }
 
     @Override
     public UserProfileDto addProfile() {
-        UserContextDto userDto= UserContextHolder.getUserDto();
-        User user=userRepository.findById(userDto.getId()).orElseThrow(()->new RuntimeException("User Not Found"));
-        UserProfileDto userProfileDto=new UserProfileDto();
+        UserContextDto userDto = UserContextHolder.getUserDto();
+        User user = userRepository.findById(userDto.getId()).orElseThrow(() -> new RuntimeException("User Not Found"));
+        UserProfileDto userProfileDto = new UserProfileDto();
         userProfileDto.setFullName(user.getUserName());
         userProfileDto.setDob(String.valueOf(user.getDob()));
         userProfileDto.setEmail(user.getEmail());
@@ -146,11 +155,46 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public EmailVerifyDto findByEmailToName(String email) {
-        User user=userRepository.findByEmailId(email);
-        EmailVerifyDto emailVerifyDto=new EmailVerifyDto();
+        User user = userRepository.findByEmailId(email);
+        EmailVerifyDto emailVerifyDto = new EmailVerifyDto();
         emailVerifyDto.setEmail(user.getEmail());
         emailVerifyDto.setName(user.getUserName());
         return emailVerifyDto;
     }
+
+    @Override
+    public User getAggregation() {
+        org.springframework.data.mongodb.core.query.Query query = new Query();
+        query.addCriteria(Criteria.where("email").is("bharani.c@hepl.com"));
+        List<User> userList = mongoTemplate.find(query, User.class);
+        if (userList != null && !userList.isEmpty()) {
+            return userList.get(0);
+        }
+        return null;
+    }
+
+//    public String getNoReturnName(String mobile) {
+//        Aggregation aggregation = Aggregation.newAggregation(
+//                Aggregation.match(Criteria.where(mobile).is(mobile)
+//                ), Aggregation.project("userName"));
+//        AggregationResults<User> results = mongoTemplate.aggregate(aggregation, "m_users", User.class);
+//        if (results != null && !results.getMappedResults().isEmpty()) {
+//            User user = results.getMappedResults().get(0);
+//            return user.getUserName();
+//        }
+//        return null;
+//    }
+public String getNoReturnName(String mobile) {
+    Aggregation aggregation = Aggregation.newAggregation(
+            Aggregation.match(Criteria.where("mobile").is(mobile)),
+            Aggregation.project("name")
+    );
+    AggregationResults<User> results = mongoTemplate.aggregate(aggregation, "m_users", User.class);
+    if (results != null && !results.getMappedResults().isEmpty()) {
+        User user = results.getMappedResults().get(0);
+        return user.getUserName();
+    }
+    return null;
+}
 
 }
